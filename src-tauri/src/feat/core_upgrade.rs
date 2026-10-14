@@ -219,7 +219,7 @@ fn asset_base_name(alpha: bool) -> Result<&'static str> {
             "aarch64" => "mihomo-linux-arm64",
             "arm" => "mihomo-linux-armv7",
             "riscv64" => "mihomo-linux-riscv64",
-            "loongarch64" => "mihomo-linux-loong64",
+            "loongarch64" => "mihomo-linux-loong64-abi2",
             _ => return Err(unsupported()),
         }
     };

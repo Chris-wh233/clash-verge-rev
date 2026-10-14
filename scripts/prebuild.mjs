@@ -181,7 +181,7 @@ const META_ALPHA_MAP = {
   'linux-arm64': 'mihomo-linux-arm64',
   'linux-arm': 'mihomo-linux-armv7',
   'linux-riscv64': 'mihomo-linux-riscv64',
-  'linux-loong64': 'mihomo-linux-loong64',
+  'linux-loong64': 'mihomo-linux-loong64-abi2',
 }
 
 const META_MAP = {
@@ -195,7 +195,7 @@ const META_MAP = {
   'linux-arm64': 'mihomo-linux-arm64',
   'linux-arm': 'mihomo-linux-armv7',
   'linux-riscv64': 'mihomo-linux-riscv64',
-  'linux-loong64': 'mihomo-linux-loong64',
+  'linux-loong64': 'mihomo-linux-loong64-abi2',
 }
 
 // Release discovery
@@ -589,7 +589,10 @@ async function resolveServiceBundle() {
   const serviceDependency = cargoManifest
     .split(/\r?\n/)
     .find((line) => line.trimStart().startsWith('clash_verge_service_ipc ='))
-  const sourcePath = serviceDependency?.match(/\bpath\s*=\s*"([^"]+)"/)?.[1]
+  const localSourcePath = serviceDependency?.match(/\bpath\s*=\s*"([^"]+)"/)?.[1]
+  const sourcePath = process.env.CLASH_VERGE_SERVICE_IPC_SOURCE
+    ? path.resolve(process.env.CLASH_VERGE_SERVICE_IPC_SOURCE)
+    : localSourcePath
   if (sourcePath) {
     const manifest = path.resolve(cwd, 'src-tauri', sourcePath, 'Cargo.toml')
     const targetDirectory = path.join(cwd, 'target', 'bundled-service')
