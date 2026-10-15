@@ -47,6 +47,9 @@ codegen-units = 1
 split-debuginfo = "unpacked"
 
 [patch.crates-io]
+# Rust's LoongArch LSX intrinsics are not stable yet; use float16's software fallback.
+float16 = { path = "third-party/float16" }
+
 # Backport Windows menu command ID recycling on the muda 0.20 compatibility branch.
 muda = { git = "https://github.com/wonfen/muda.git", rev = "547de49352791653fbdfa785f20f3c7ece8468e2" }
 
