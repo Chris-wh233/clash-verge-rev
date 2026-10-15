@@ -1,0 +1,73 @@
+name: Build LoongArch Inputs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  HUSKY: 0
+
+jobs:
+  build:
+    name: Build frontend and stage LoongArch inputs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.10.0
+          run_install: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.21.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        run: pnpm run web:build
+
+      - name: Download LoongArch runtime resources
+        shell: bash
+        run: |
+          mkdir -p src-tauri/resources src-tauri/sidecar
+
+          curl -fL --retry 3 -o src-tauri/resources/Country.mmdb \
+            https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb
+          curl -fL --retry 3 -o src-tauri/resources/ASN.mmdb \
+            https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
+          curl -fL --retry 3 -o src-tauri/resources/geosite.dat \
+            https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
+          curl -fL --retry 3 -o src-tauri/resources/geoip.dat \
+            https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
+
+          stable_version="$(curl -fsSL https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt)"
+          alpha_version="$(curl -fsSL https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt)"
+
+          curl -fL --retry 3 \
+            "https://github.com/MetaCubeX/mihomo/releases/download/${stable_version}/mihomo-linux-loong64-abi2-${stable_version}.gz" \
+            | gzip -dc > src-tauri/sidecar/verge-mihomo-loongarch64-unknown-linux-gnu
+
+          curl -fL --retry 3 \
+            "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/mihomo-linux-loong64-abi2-${alpha_version}.gz" \
+            | gzip -dc > src-tauri/sidecar/verge-mihomo-alpha-loongarch64-unknown-linux-gnu
+
+          chmod +x src-tauri/sidecar/verge-mihomo*-loongarch64-unknown-linux-gnu
+
+      - name: Upload LoongArch build inputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: loongarch-build-inputs
+          path: |
+            dist
+            src-tauri/resources
+            src-tauri/sidecar/verge-mihomo-loongarch64-unknown-linux-gnu
+            src-tauri/sidecar/verge-mihomo-alpha-loongarch64-unknown-linux-gnu
+          if-no-files-found: error
+          retention-days: 14
